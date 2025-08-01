@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './components/ui/dialog';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
-import { PluginSettings, ColorChangeEvent } from './types/sigma';
+import { PluginSettings } from './types/sigma';
 
 // Default settings
 export const DEFAULT_SETTINGS: PluginSettings = {
   backgroundColor: '#ffffff',
-  textColor: '#000000'
+  textColor: '#000000',
+  transparentBackground: true,
+  textAlignment: 'left'
 };
 
 interface SettingsProps {
@@ -38,7 +40,7 @@ const Settings: React.FC<SettingsProps> = ({
     setTempSettings(settingsWithDefaults);
   }, [currentSettings]);
 
-  const handleSave = useCallback((): void => {
+  const handleSave = (): void => {
     const configJson = JSON.stringify(tempSettings, null, 2);
     
     try {
@@ -47,20 +49,28 @@ const Settings: React.FC<SettingsProps> = ({
     } catch (error) {
       console.error('Error saving settings:', error);
     }
-  }, [tempSettings, client, onSave]);
+  };
 
-  const handleCancel = useCallback((): void => {
+  const handleCancel = (): void => {
     setTempSettings(currentSettings);
     onClose();
-  }, [currentSettings, onClose]);
+  };
 
-  const handleBackgroundColorChange = useCallback((e: ColorChangeEvent): void => {
+  const handleBackgroundColorChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setTempSettings((prev: PluginSettings) => ({ ...prev, backgroundColor: e.target.value }));
-  }, []);
+  };
 
-  const handleTextColorChange = useCallback((e: ColorChangeEvent): void => {
+  const handleTextColorChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setTempSettings((prev: PluginSettings) => ({ ...prev, textColor: e.target.value }));
-  }, []);
+  };
+
+  const handleTransparentBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setTempSettings((prev: PluginSettings) => ({ ...prev, transparentBackground: e.target.checked }));
+  };
+
+  const handleTextAlignmentChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    setTempSettings((prev: PluginSettings) => ({ ...prev, textAlignment: e.target.value as 'left' | 'center' | 'right' | 'justify' }));
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -71,6 +81,20 @@ const Settings: React.FC<SettingsProps> = ({
         
         <div className="space-y-4">
           <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Input
+                id="transparentBackground"
+                type="checkbox"
+                checked={tempSettings.transparentBackground}
+                onChange={handleTransparentBackgroundChange}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="transparentBackground">Transparent Background</Label>
+            </div>
+            <p className="text-sm text-muted-foreground">Enable transparent background (overrides background color)</p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="backgroundColor">Background Color</Label>
             <Input
               id="backgroundColor"
@@ -78,8 +102,14 @@ const Settings: React.FC<SettingsProps> = ({
               value={tempSettings.backgroundColor}
               onChange={handleBackgroundColorChange}
               className="h-10"
+              disabled={tempSettings.transparentBackground}
             />
-            <p className="text-sm text-muted-foreground">Choose the background color for the plugin</p>
+            <p className="text-sm text-muted-foreground">
+              {tempSettings.transparentBackground 
+                ? "Background color is disabled when transparency is enabled" 
+                : "Choose the background color for the plugin"
+              }
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -92,6 +122,22 @@ const Settings: React.FC<SettingsProps> = ({
               className="h-10"
             />
             <p className="text-sm text-muted-foreground">Choose the text color for the plugin</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="textAlignment">Text Alignment</Label>
+            <select
+              id="textAlignment"
+              value={tempSettings.textAlignment}
+              onChange={handleTextAlignmentChange}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+              <option value="justify">Justify</option>
+            </select>
+            <p className="text-sm text-muted-foreground">Choose how text should be aligned</p>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { client, useConfig, useVariable } from '@sigmacomputing/plugin';
 import ReactMarkdown from 'react-markdown';
 import { Button } from './components/ui/button';
@@ -11,6 +11,35 @@ import {
 } from './types/sigma';
 import './App.css';
 
+// Separate component for variable connection that can be remounted
+interface VariableConnectorProps {
+  variableName: string;
+  onMarkdownChange: (markdown: string) => void;
+}
+
+const VariableConnector: React.FC<VariableConnectorProps> = ({ variableName, onMarkdownChange }) => {
+  const [markdownText] = useVariable(variableName);
+  
+  useEffect(() => {
+    const extractMarkdownText = (text: any): string => {
+      if (!text) return '';
+      if (typeof text === 'string') return text;
+      
+      // Handle common object structures
+      if (typeof text === 'object') {
+        return String(text.defaultValue?.value ?? text.value ?? text.text ?? text.content ?? '');
+      }
+      
+      return String(text);
+    };
+    
+    const markdown = extractMarkdownText(markdownText);
+    onMarkdownChange(markdown);
+  }, [markdownText, onMarkdownChange]);
+  
+  return null; // This component only handles data, no rendering
+};
+
 // Configure the plugin editor panel
 client.config.configureEditorPanel([
   { name: 'textControl', type: 'variable', label: 'Text Control (Markdown Source)' },
@@ -20,9 +49,14 @@ client.config.configureEditorPanel([
 
 const App: React.FC = (): React.JSX.Element => {
   const config: SigmaConfig = useConfig();
-  const [markdownText] = useVariable(config.textControl || '');
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [settings, setSettings] = useState<PluginSettings>(DEFAULT_SETTINGS);
+  const [markdownContent, setMarkdownContent] = useState<string>('');
+  
+  // Handle markdown content updates from the variable connector
+  const handleMarkdownChange = (markdown: string) => {
+    setMarkdownContent(markdown);
+  };
 
   // Parse config JSON and load settings
   useEffect(() => {
@@ -44,39 +78,41 @@ const App: React.FC = (): React.JSX.Element => {
     }
   }, [config.config]);
 
-  const handleSettingsSave = useCallback((newSettings: PluginSettings): void => {
+  // Update body background based on transparency setting
+  useEffect(() => {
+    const body = document.body;
+    const html = document.documentElement;
+    
+    if (settings.transparentBackground) {
+      // Make iframe truly transparent
+      body.style.backgroundColor = 'transparent';
+      html.style.backgroundColor = 'transparent';
+      body.classList.add('transparent-mode');
+    } else {
+      // Restore original background
+      body.style.backgroundColor = settings.backgroundColor;
+      html.style.backgroundColor = settings.backgroundColor;
+      body.classList.remove('transparent-mode');
+    }
+
+    // Cleanup function
+    return () => {
+      body.classList.remove('transparent-mode');
+    };
+  }, [settings.transparentBackground, settings.backgroundColor]);
+
+  const handleSettingsSave = (newSettings: PluginSettings): void => {
     setSettings(newSettings);
     setShowSettings(false);
-  }, []);
+  };
 
-  const handleShowSettings = useCallback((): void => {
+  const handleShowSettings = (): void => {
     setShowSettings(true);
-  }, []);
+  };
 
-  const handleCloseSettings = useCallback((): void => {
+  const handleCloseSettings = (): void => {
     setShowSettings(false);
-  }, []);
-
-  // Get markdown text from the control
-  const getMarkdownContent = useCallback((): string => {
-    if (!markdownText) {
-      return '';
-    }
-
-    // Handle different variable object structures from Sigma
-    if (typeof markdownText === 'object') {
-      // Try common Sigma variable properties
-      if ((markdownText as any).value !== undefined) {
-        return String((markdownText as any).value);
-      } else if ((markdownText as any).defaultValue !== undefined) {
-        return String((markdownText as any).defaultValue);
-      }
-    }
-
-    return String(markdownText);
-  }, [markdownText]);
-
-  const markdownContent = getMarkdownContent();
+  };
 
   // Early return for missing text control
   if (!config.textControl) {
@@ -84,7 +120,7 @@ const App: React.FC = (): React.JSX.Element => {
       <div 
         className="min-h-screen flex items-center justify-center p-10"
         style={{ 
-          backgroundColor: String(settings.backgroundColor) || 'white',
+          backgroundColor: settings.transparentBackground ? 'transparent' : (String(settings.backgroundColor) || 'white'),
           color: String(settings.textColor) || 'black'
         }}
       >
@@ -100,10 +136,17 @@ const App: React.FC = (): React.JSX.Element => {
     <div 
       className="min-h-screen relative overflow-hidden"
       style={{ 
-        backgroundColor: String(settings.backgroundColor) || 'white',
+        backgroundColor: settings.transparentBackground ? 'transparent' : (String(settings.backgroundColor) || 'white'),
         color: String(settings.textColor) || 'black'
       }}
     >
+      {/* Variable connector */}
+      {config.textControl && (
+        <VariableConnector
+          variableName={config.textControl}
+          onMarkdownChange={handleMarkdownChange}
+        />
+      )}
       {config.editMode && (
         <Button 
           className="absolute top-5 right-5 z-10 gap-2"
@@ -118,19 +161,23 @@ const App: React.FC = (): React.JSX.Element => {
       <div className="w-full h-screen p-5 box-border overflow-auto">
         <div className="max-w-4xl mx-auto">
           {markdownContent ? (
-            <div className="prose prose-lg max-w-none markdown-content">
+            <div 
+              className="prose prose-lg max-w-none markdown-content"
+              style={{ textAlign: settings.textAlignment }}
+            >
               <ReactMarkdown
                 components={{
-                  // Custom styling for markdown elements to inherit colors
-                  h1: ({children, ...props}) => <h1 {...props} style={{color: String(settings.textColor)}}>{children}</h1>,
-                  h2: ({children, ...props}) => <h2 {...props} style={{color: String(settings.textColor)}}>{children}</h2>,
-                  h3: ({children, ...props}) => <h3 {...props} style={{color: String(settings.textColor)}}>{children}</h3>,
-                  h4: ({children, ...props}) => <h4 {...props} style={{color: String(settings.textColor)}}>{children}</h4>,
-                  h5: ({children, ...props}) => <h5 {...props} style={{color: String(settings.textColor)}}>{children}</h5>,
-                  h6: ({children, ...props}) => <h6 {...props} style={{color: String(settings.textColor)}}>{children}</h6>,
-                  p: ({children, ...props}) => <p {...props} style={{color: String(settings.textColor)}}>{children}</p>,
-                  li: ({children, ...props}) => <li {...props} style={{color: String(settings.textColor)}}>{children}</li>,
-                  blockquote: ({children, ...props}) => <blockquote {...props} style={{color: String(settings.textColor), borderLeftColor: String(settings.textColor)}}>{children}</blockquote>,
+                  // Create a reusable styled component function
+                  ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li'].reduce((acc, tag) => {
+                    acc[tag] = ({children, ...props}: {children: React.ReactNode; [key: string]: any}) => 
+                      React.createElement(tag, {...props, style: {color: settings.textColor}}, children);
+                    return acc;
+                  }, {} as Record<string, React.ComponentType<any>>),
+                  blockquote: ({children, ...props}) => (
+                    <blockquote {...props} style={{color: settings.textColor, borderLeftColor: settings.textColor}}>
+                      {children}
+                    </blockquote>
+                  ),
                 }}
               >
                 {markdownContent}
@@ -140,10 +187,16 @@ const App: React.FC = (): React.JSX.Element => {
             <div className="text-center py-20">
               <h3 className="text-lg font-semibold mb-4">Markdown Display Plugin</h3>
               <p className="text-muted-foreground">
-                The selected text control is empty or contains no markdown content.
+                {config.textControl ? 
+                  'The selected text control is empty or contains no markdown content.' :
+                  'Please select a text control to display markdown content.'
+                }
               </p>
               <p className="text-sm text-muted-foreground mt-2">
-                Enter some markdown text in the connected control to see it rendered here.
+                {config.textControl ?
+                  'Enter some markdown text in the connected control to see it rendered here.' :
+                  'Use the configuration panel to connect a text control with markdown content.'
+                }
               </p>
             </div>
           )}
@@ -162,3 +215,4 @@ const App: React.FC = (): React.JSX.Element => {
 };
 
 export default App; 
+

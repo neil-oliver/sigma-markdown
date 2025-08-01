@@ -9,6 +9,8 @@ export interface SigmaConfig {
 export interface PluginSettings {
   backgroundColor: string;
   textColor: string;
+  transparentBackground: boolean;
+  textAlignment: 'left' | 'center' | 'right' | 'justify';
 }
 
 // Sigma client interface (based on @sigmacomputing/plugin)
@@ -40,10 +42,3 @@ export interface ConfigParseError {
   message: string;
   originalError: unknown;
 }
-
-// Event handler types
-export interface ColorChangeEvent {
-  target: {
-    value: string;
-  };
-} 

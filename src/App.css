@@ -5,6 +5,13 @@
   line-height: 1.6;
 }
 
+/* Ensure text alignment works properly with markdown elements */
+.markdown-content p,
+.markdown-content div,
+.markdown-content span {
+  text-align: inherit;
+}
+
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3,
