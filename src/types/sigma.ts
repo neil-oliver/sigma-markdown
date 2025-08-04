@@ -11,6 +11,9 @@ export interface PluginSettings {
   textColor: string;
   transparentBackground: boolean;
   textAlignment: 'left' | 'center' | 'right' | 'justify';
+  contentAlignment: 'left' | 'center' | 'right';
+  blockAlignment: 'left' | 'center' | 'right' | 'justify';
+  contentWidth: 'full' | 'narrow' | 'medium' | 'wide';
 }
 
 // Sigma client interface (based on @sigmacomputing/plugin)

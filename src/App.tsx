@@ -114,6 +114,45 @@ const App: React.FC = (): React.JSX.Element => {
     setShowSettings(false);
   };
 
+  // Get container classes based on content width setting
+  const getContainerClasses = (): string => {
+    let classes = '';
+    
+    // Handle content width
+    switch (settings.contentWidth) {
+      case 'full':
+        classes += 'w-full';
+        break;
+      case 'wide':
+        classes += 'max-w-7xl';
+        break;
+      case 'medium':
+        classes += 'max-w-4xl';
+        break;
+      case 'narrow':
+        classes += 'max-w-2xl';
+        break;
+      default:
+        classes += 'w-full';
+    }
+    
+    // Handle content alignment
+    switch (settings.contentAlignment) {
+      case 'center':
+        classes += ' mx-auto';
+        break;
+      case 'right':
+        classes += ' ml-auto';
+        break;
+      case 'left':
+      default:
+        // No additional classes needed for left alignment
+        break;
+    }
+    
+    return classes;
+  };
+
   // Early return for missing text control
   if (!config.textControl) {
     return (
@@ -159,7 +198,7 @@ const App: React.FC = (): React.JSX.Element => {
       )}
       
       <div className="w-full h-screen p-5 box-border overflow-auto">
-        <div className="max-w-4xl mx-auto">
+        <div className={getContainerClasses()}>
           {markdownContent ? (
             <div 
               className="prose prose-lg max-w-none markdown-content"
@@ -170,11 +209,24 @@ const App: React.FC = (): React.JSX.Element => {
                   // Create a reusable styled component function
                   ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li'].reduce((acc, tag) => {
                     acc[tag] = ({children, ...props}: {children: React.ReactNode; [key: string]: any}) => 
-                      React.createElement(tag, {...props, style: {color: settings.textColor}}, children);
+                      React.createElement(tag, {
+                        ...props, 
+                        style: {
+                          color: settings.textColor,
+                          textAlign: settings.blockAlignment
+                        }
+                      }, children);
                     return acc;
                   }, {} as Record<string, React.ComponentType<any>>),
                   blockquote: ({children, ...props}) => (
-                    <blockquote {...props} style={{color: settings.textColor, borderLeftColor: settings.textColor}}>
+                    <blockquote 
+                      {...props} 
+                      style={{
+                        color: settings.textColor, 
+                        borderLeftColor: settings.textColor,
+                        textAlign: settings.blockAlignment
+                      }}
+                    >
                       {children}
                     </blockquote>
                   ),
