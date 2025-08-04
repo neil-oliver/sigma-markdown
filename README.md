@@ -5,7 +5,7 @@ A Sigma Computing plugin that displays markdown content from a Sigma control, bu
 ## Features
 
 - **Markdown Rendering**: Displays markdown content from a selected Sigma text control using react-markdown
-- **Settings Panel**: Configurable background and text colors (accessible in edit mode)
+- **Settings Panel**: Comprehensive customization options including colors, alignment, and sizing (accessible in edit mode)
 - **TypeScript**: Full type safety with strict configuration and better developer experience
 - **shadcn/ui Components**: Modern, accessible UI components built with Radix UI
 - **Sigma Integration**: Ready-to-use Sigma plugin configuration for variable controls
@@ -46,6 +46,27 @@ The plugin is configured with the following editor panel options:
 - **Text Control (Markdown Source)**: Select a Sigma text control that contains markdown content
 - **Settings Config**: JSON configuration for plugin settings
 - **Edit Mode**: Toggle to access settings panel
+
+### Available Settings
+
+The plugin offers comprehensive customization options:
+
+**Colors & Background:**
+- **Background Color**: Choose a custom background color
+- **Text Color**: Set the text color for all content
+- **Transparent Background**: Enable transparency (overrides background color)
+
+**Alignment Options:**
+- **Content Alignment**: Position the entire content block (left, center, right)
+- **Text Alignment**: Align individual text elements (left, center, right, justify)
+- **Block Alignment**: Align markdown blocks like headings and paragraphs (left, center, right, justify)
+
+**Sizing Options:**
+- **Content Width**: Control the maximum width of the content area
+  - Full Width: Uses the full container width
+  - Wide: Maximum 1200px
+  - Medium: Maximum 800px
+  - Narrow: Maximum 600px
 
 ## Customization
 
@@ -100,8 +121,8 @@ src/
    
 2. **Configure the Plugin**:
    - Select the text control as the "Text Control (Markdown Source)"
-   - Enable "Edit Mode" to access styling settings if needed
-   - Customize background and text colors in the settings panel
+   - Enable "Edit Mode" to access styling settings
+   - Customize colors, alignment, and sizing options in the settings panel
 
 3. **Markdown Features Supported**:
    - Headers (# ## ### etc.)
