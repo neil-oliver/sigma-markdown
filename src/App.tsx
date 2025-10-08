@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { client, useConfig, useVariable } from '@sigmacomputing/plugin';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Button } from './components/ui/button';
 import { Settings as SettingsIcon } from 'lucide-react';
 import Settings, { DEFAULT_SETTINGS } from './Settings';
@@ -205,6 +206,7 @@ const App: React.FC = (): React.JSX.Element => {
               style={{ textAlign: settings.textAlignment }}
             >
               <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
                 components={{
                   // Create a reusable styled component function
                   ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li'].reduce((acc, tag) => {
