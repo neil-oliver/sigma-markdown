@@ -107,4 +107,36 @@
 .markdown-content th {
   background-color: rgba(128, 128, 128, 0.1);
   font-weight: 600;
+}
+
+/* SimpleMDE Editor Styling for Split View */
+.EasyMDEContainer {
+  height: 100%;
+}
+
+.EasyMDEContainer .CodeMirror {
+  height: calc(100vh - 120px);
+  border: none;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.EasyMDEContainer .editor-toolbar {
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.EasyMDEContainer .CodeMirror-scroll {
+  min-height: 100%;
+}
+
+/* Hide SimpleMDE's built-in preview and side-by-side since we have our own */
+.EasyMDEContainer .editor-preview-side,
+.EasyMDEContainer .editor-preview-active-side {
+  display: none !important;
+}
+
+.EasyMDEContainer .CodeMirror-fullscreen {
+  z-index: 9999;
 } 
