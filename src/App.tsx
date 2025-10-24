@@ -45,7 +45,7 @@ const VariableConnector: React.FC<VariableConnectorProps> = ({ variableName, onM
 client.config.configureEditorPanel([
   { name: 'textControl', type: 'variable', label: 'Text Control (Markdown Source)' },
   { name: 'config', type: 'text', label: 'Settings Config (JSON)', defaultValue: "{}" },
-  { name: 'editMode', type: 'toggle', label: 'Edit Mode' }
+  { name: 'styleMode', type: 'toggle', label: 'Style Mode' }
 ]);
 
 const App: React.FC = (): React.JSX.Element => {
@@ -187,7 +187,7 @@ const App: React.FC = (): React.JSX.Element => {
           onMarkdownChange={handleMarkdownChange}
         />
       )}
-      {config.editMode && (
+      {config.styleMode && (
         <Button 
           className="absolute top-5 right-5 z-10 gap-2"
           onClick={handleShowSettings}
