@@ -14,6 +14,7 @@ import {
   Eye
 } from 'lucide-react';
 import Settings, { DEFAULT_SETTINGS } from './Settings';
+import Onboarding from './Onboarding';
 import { 
   SigmaConfig, 
   PluginSettings, 
@@ -374,21 +375,13 @@ const App: React.FC = (): React.JSX.Element => {
     return classes;
   };
 
-  // Early return for missing text control
+  // Early return for missing text control - show onboarding
   if (!config.textControl) {
     return (
-      <div 
-        className="min-h-screen flex items-center justify-center p-10"
-        style={{ 
-          backgroundColor: settings.transparentBackground ? 'transparent' : (String(settings.backgroundColor) || 'white'),
-          color: String(settings.textColor) || 'black'
-        }}
-      >
-        <div className="text-center max-w-xl">
-          <h3 className="text-lg font-semibold mb-2">Markdown Display Plugin</h3>
-          <p className="text-muted-foreground">Please select a text control to display markdown content.</p>
-        </div>
-      </div>
+      <Onboarding 
+        hasTextControl={false}
+        onOpenSettings={handleShowSettings}
+      />
     );
   }
 
