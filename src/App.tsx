@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { client, useConfig, useVariable } from '@sigmacomputing/plugin';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
