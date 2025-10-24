@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { client, useConfig, useVariable } from '@sigmacomputing/plugin';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -13,6 +13,20 @@ import {
   ConfigParseError 
 } from './types/sigma';
 import './App.css';
+
+// Storage key for persisting content across reloads
+const CONTENT_CACHE_KEY = 'sigma-markdown-content-cache';
+
+// Try to restore cache from sessionStorage on module load
+let globalContentCache = '';
+try {
+  const stored = sessionStorage.getItem(CONTENT_CACHE_KEY);
+  if (stored) {
+    globalContentCache = stored;
+  }
+} catch (e) {
+  console.warn('Failed to restore cache from sessionStorage:', e);
+}
 
 // Separate component for variable connection that can be remounted
 interface VariableConnectorProps {
@@ -59,18 +73,44 @@ const App: React.FC = (): React.JSX.Element => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   
   // Handle markdown content updates from the variable connector
-  const handleMarkdownChange = (markdown: string) => {
-    setMarkdownContent(markdown);
+  const handleMarkdownChange = useCallback((markdown: string) => {
+    // Update global cache and persist to sessionStorage
+    if (markdown) {
+      globalContentCache = markdown;
+      try {
+        sessionStorage.setItem(CONTENT_CACHE_KEY, markdown);
+      } catch (e) {
+        console.warn('Failed to persist to sessionStorage:', e);
+      }
+    } else {
+      // If cache is empty, try to restore from sessionStorage
+      if (!globalContentCache) {
+        try {
+          const stored = sessionStorage.getItem(CONTENT_CACHE_KEY);
+          if (stored) {
+            globalContentCache = stored;
+          }
+        } catch (e) {
+          console.warn('Failed to restore from sessionStorage:', e);
+        }
+      }
+    }
+    
+    // Update state, using cache if markdown is empty
+    const finalContent = markdown || globalContentCache;
+    setMarkdownContent(finalContent);
+    
     // Update draft if we're in edit mode and don't have unsaved changes
     if (config.mode === 'edit' && !hasUnsavedChanges) {
-      setDraftContent(markdown);
+      setDraftContent(finalContent);
     }
-  };
+  }, [config.mode, hasUnsavedChanges]);
 
   // Initialize draft content when entering edit mode
   useEffect(() => {
     if (config.mode === 'edit' && !hasUnsavedChanges) {
-      setDraftContent(markdownContent);
+      const content = markdownContent || globalContentCache;
+      setDraftContent(content);
     }
   }, [config.mode, markdownContent, hasUnsavedChanges]);
 
@@ -236,6 +276,7 @@ const App: React.FC = (): React.JSX.Element => {
       {/* Variable connector */}
       {config.textControl && (
         <VariableConnector
+          key={config.textControl}
           variableName={config.textControl}
           onMarkdownChange={handleMarkdownChange}
         />
