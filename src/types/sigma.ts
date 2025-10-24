@@ -2,8 +2,7 @@
 export interface SigmaConfig {
   textControl?: string;
   config?: string;
-  styleMode?: boolean;
-  editMode?: boolean;
+  mode?: 'preview' | 'style' | 'edit';
 }
 
 // Plugin settings interface

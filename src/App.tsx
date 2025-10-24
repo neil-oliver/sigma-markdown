@@ -47,8 +47,7 @@ const VariableConnector: React.FC<VariableConnectorProps> = ({ variableName, onM
 client.config.configureEditorPanel([
   { name: 'textControl', type: 'variable', label: 'Text Control (Markdown Source)' },
   { name: 'config', type: 'text', label: 'Settings Config (JSON)', defaultValue: "{}" },
-  { name: 'styleMode', type: 'toggle', label: 'Style Mode' },
-  { name: 'editMode', type: 'toggle', label: 'Edit Mode' }
+  { name: 'mode', type: 'radio', label: 'Mode', values: ['preview', 'style', 'edit'], defaultValue: 'preview' }
 ]);
 
 const App: React.FC = (): React.JSX.Element => {
@@ -63,17 +62,17 @@ const App: React.FC = (): React.JSX.Element => {
   const handleMarkdownChange = (markdown: string) => {
     setMarkdownContent(markdown);
     // Update draft if we're in edit mode and don't have unsaved changes
-    if (config.editMode && !hasUnsavedChanges) {
+    if (config.mode === 'edit' && !hasUnsavedChanges) {
       setDraftContent(markdown);
     }
   };
 
   // Initialize draft content when entering edit mode
   useEffect(() => {
-    if (config.editMode && !hasUnsavedChanges) {
+    if (config.mode === 'edit' && !hasUnsavedChanges) {
       setDraftContent(markdownContent);
     }
-  }, [config.editMode, markdownContent, hasUnsavedChanges]);
+  }, [config.mode, markdownContent, hasUnsavedChanges]);
 
   // Parse config JSON and load settings
   useEffect(() => {
@@ -241,7 +240,7 @@ const App: React.FC = (): React.JSX.Element => {
           onMarkdownChange={handleMarkdownChange}
         />
       )}
-      {config.styleMode && (
+      {config.mode === 'style' && (
         <Button 
           className="absolute top-5 right-5 z-10 gap-2"
           onClick={handleShowSettings}
@@ -252,7 +251,7 @@ const App: React.FC = (): React.JSX.Element => {
         </Button>
       )}
       
-      {config.editMode ? (
+      {config.mode === 'edit' ? (
         /* Edit Mode - Split View */
         <div className="w-full h-screen flex flex-col">
           {/* Action Bar */}
