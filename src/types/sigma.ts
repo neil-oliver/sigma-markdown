@@ -14,6 +14,7 @@ export interface PluginSettings {
   contentAlignment: 'left' | 'center' | 'right';
   blockAlignment: 'left' | 'center' | 'right' | 'justify';
   contentWidth: 'full' | 'narrow' | 'medium' | 'wide';
+  editorViewMode?: 'split' | 'editor' | 'preview';
 }
 
 // Sigma client interface (based on @sigmacomputing/plugin)

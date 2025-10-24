@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import SimpleMDE from 'react-simplemde-editor';
 import 'easymde/dist/easymde.min.css';
 import { Button } from './components/ui/button';
-import { Settings as SettingsIcon, Save, X } from 'lucide-react';
+import { Settings as SettingsIcon, Save, X, Columns2, FileText, Eye } from 'lucide-react';
 import Settings, { DEFAULT_SETTINGS } from './Settings';
 import { 
   SigmaConfig, 
@@ -170,6 +170,10 @@ const App: React.FC = (): React.JSX.Element => {
     setShowSettings(false);
   };
 
+  const handleToggleViewMode = (mode: 'split' | 'editor' | 'preview'): void => {
+    setSettings(prev => ({ ...prev, editorViewMode: mode }));
+  };
+
   const handleEditorChange = (value: string): void => {
     setDraftContent(value);
     setHasUnsavedChanges(true);
@@ -303,7 +307,38 @@ const App: React.FC = (): React.JSX.Element => {
                 <span className="text-sm text-yellow-600">Unsaved changes</span>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-3">
+              {/* View Mode Toggle */}
+              <div className="flex gap-1 border rounded-md p-1">
+                <Button
+                  variant={settings.editorViewMode === 'editor' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => handleToggleViewMode('editor')}
+                  className="gap-1 h-8"
+                  title="Editor Only"
+                >
+                  <FileText className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={settings.editorViewMode === 'split' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => handleToggleViewMode('split')}
+                  className="gap-1 h-8"
+                  title="Split View"
+                >
+                  <Columns2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={settings.editorViewMode === 'preview' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => handleToggleViewMode('preview')}
+                  className="gap-1 h-8"
+                  title="Preview Only"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="h-6 w-px bg-border"></div>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -327,61 +362,65 @@ const App: React.FC = (): React.JSX.Element => {
           {/* Split View */}
           <div className="flex-1 flex overflow-hidden">
             {/* Editor Pane */}
-            <div className="w-1/2 border-r overflow-auto">
-              <SimpleMDE
-                value={draftContent}
-                onChange={handleEditorChange}
-                options={editorOptions}
-              />
-            </div>
+            {(settings.editorViewMode === 'editor' || settings.editorViewMode === 'split') && (
+              <div className={`${settings.editorViewMode === 'split' ? 'w-1/2 border-r' : 'w-full'} overflow-auto`}>
+                <SimpleMDE
+                  value={draftContent}
+                  onChange={handleEditorChange}
+                  options={editorOptions}
+                />
+              </div>
+            )}
 
             {/* Preview Pane */}
-            <div className="w-1/2 overflow-auto p-5">
-              <div className={getContainerClasses()}>
-                {draftContent ? (
-                  <div 
-                    className="prose prose-lg max-w-none markdown-content"
-                    style={{ textAlign: settings.textAlignment }}
-                  >
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        // Create a reusable styled component function
-                        ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li'].reduce((acc, tag) => {
-                          acc[tag] = ({children, ...props}: {children: React.ReactNode; [key: string]: any}) => 
-                            React.createElement(tag, {
-                              ...props, 
-                              style: {
-                                color: settings.textColor,
-                                textAlign: settings.blockAlignment
-                              }
-                            }, children);
-                          return acc;
-                        }, {} as Record<string, React.ComponentType<any>>),
-                        blockquote: ({children, ...props}) => (
-                          <blockquote 
-                            {...props} 
-                            style={{
-                              color: settings.textColor, 
-                              borderLeftColor: settings.textColor,
-                              textAlign: settings.blockAlignment
-                            }}
-                          >
-                            {children}
-                          </blockquote>
-                        ),
-                      }}
+            {(settings.editorViewMode === 'preview' || settings.editorViewMode === 'split') && (
+              <div className={`${settings.editorViewMode === 'split' ? 'w-1/2' : 'w-full'} overflow-auto p-5`}>
+                <div className={getContainerClasses()}>
+                  {draftContent ? (
+                    <div 
+                      className="prose prose-lg max-w-none markdown-content"
+                      style={{ textAlign: settings.textAlignment }}
                     >
-                      {draftContent}
-                    </ReactMarkdown>
-                  </div>
-                ) : (
-                  <div className="text-center py-20">
-                    <p className="text-muted-foreground">Start typing markdown to see preview...</p>
-                  </div>
-                )}
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // Create a reusable styled component function
+                          ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li'].reduce((acc, tag) => {
+                            acc[tag] = ({children, ...props}: {children: React.ReactNode; [key: string]: any}) => 
+                              React.createElement(tag, {
+                                ...props, 
+                                style: {
+                                  color: settings.textColor,
+                                  textAlign: settings.blockAlignment
+                                }
+                              }, children);
+                            return acc;
+                          }, {} as Record<string, React.ComponentType<any>>),
+                          blockquote: ({children, ...props}) => (
+                            <blockquote 
+                              {...props} 
+                              style={{
+                                color: settings.textColor, 
+                                borderLeftColor: settings.textColor,
+                                textAlign: settings.blockAlignment
+                              }}
+                            >
+                              {children}
+                            </blockquote>
+                          ),
+                        }}
+                      >
+                        {draftContent}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="text-center py-20">
+                      <p className="text-muted-foreground">Start typing markdown to see preview...</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       ) : (
