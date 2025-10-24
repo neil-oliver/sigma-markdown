@@ -5,6 +5,18 @@ import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
 import { PluginSettings } from './types/sigma';
 
+// Available Google Fonts
+export const AVAILABLE_FONTS = [
+  { name: 'System Default', value: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+  { name: 'Roboto', value: 'Roboto, sans-serif' },
+  { name: 'Geist', value: 'Geist, sans-serif' },
+  { name: 'Inter', value: 'Inter, sans-serif' },
+  { name: 'Open Sans', value: 'Open Sans, sans-serif' },
+  { name: 'Lato', value: 'Lato, sans-serif' },
+  { name: 'Montserrat', value: 'Montserrat, sans-serif' },
+  { name: 'Merriweather', value: 'Merriweather, serif' },
+];
+
 // Default settings
 export const DEFAULT_SETTINGS: PluginSettings = {
   backgroundColor: '#ffffff',
@@ -14,7 +26,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   contentAlignment: 'left',
   blockAlignment: 'left',
   contentWidth: 'full',
-  editorViewMode: 'split'
+  editorViewMode: 'split',
+  fontFamily: AVAILABLE_FONTS[0].value
 };
 
 interface SettingsProps {
@@ -90,6 +103,10 @@ const Settings: React.FC<SettingsProps> = ({
 
   const handleEditorViewModeChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     setTempSettings((prev: PluginSettings) => ({ ...prev, editorViewMode: e.target.value as 'split' | 'editor' | 'preview' }));
+  };
+
+  const handleFontFamilyChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    setTempSettings((prev: PluginSettings) => ({ ...prev, fontFamily: e.target.value }));
   };
 
   return (
@@ -220,6 +237,23 @@ const Settings: React.FC<SettingsProps> = ({
               <option value="preview">Preview Only</option>
             </select>
             <p className="text-sm text-muted-foreground">Choose how the editor displays (applies in edit mode)</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fontFamily">Font Family</Label>
+            <select
+              id="fontFamily"
+              value={tempSettings.fontFamily || AVAILABLE_FONTS[0].value}
+              onChange={handleFontFamilyChange}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {AVAILABLE_FONTS.map((font) => (
+                <option key={font.value} value={font.value}>
+                  {font.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-muted-foreground">Choose the font family for the content</p>
           </div>
         </div>
 

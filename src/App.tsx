@@ -493,7 +493,10 @@ const App: React.FC = (): React.JSX.Element => {
                   {draftContent ? (
                     <div 
                       className="prose prose-lg max-w-none markdown-content"
-                      style={{ textAlign: settings.textAlignment }}
+                      style={{ 
+                        textAlign: settings.textAlignment,
+                        fontFamily: settings.fontFamily 
+                      }}
                     >
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
@@ -544,7 +547,10 @@ const App: React.FC = (): React.JSX.Element => {
             {markdownContent ? (
               <div 
                 className="prose prose-lg max-w-none markdown-content"
-                style={{ textAlign: settings.textAlignment }}
+                style={{ 
+                  textAlign: settings.textAlignment,
+                  fontFamily: settings.fontFamily 
+                }}
               >
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
