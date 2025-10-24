@@ -5,7 +5,14 @@ import remarkGfm from 'remark-gfm';
 import SimpleMDE from 'react-simplemde-editor';
 import 'easymde/dist/easymde.min.css';
 import { Button } from './components/ui/button';
-import { Settings as SettingsIcon, Save, X, Columns2, FileText, Eye } from 'lucide-react';
+import { 
+  Settings as SettingsIcon, 
+  Save, 
+  X, 
+  Columns2, 
+  FileText, 
+  Eye
+} from 'lucide-react';
 import Settings, { DEFAULT_SETTINGS } from './Settings';
 import { 
   SigmaConfig, 
@@ -197,16 +204,132 @@ const App: React.FC = (): React.JSX.Element => {
     setHasUnsavedChanges(false);
   };
 
-  // SimpleMDE configuration
+  // SimpleMDE configuration with custom Lucide icons
   const editorOptions = useMemo(() => ({
     autofocus: true,
     spellChecker: false,
     toolbar: [
-      'bold', 'italic', 'heading', '|',
-      'quote', 'unordered-list', 'ordered-list', '|',
-      'link', 'image', 'code', 'table', '|',
-      'undo', 'redo'
-    ] as const,
+      {
+        name: 'bold',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`**${selection}**`);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Bold',
+      },
+      {
+        name: 'italic',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`*${selection}*`);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Italic',
+      },
+      {
+        name: 'heading',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`## ${selection}`);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Heading',
+      },
+      '|' as const,
+      {
+        name: 'quote',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`> ${selection}`);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Quote',
+      },
+      {
+        name: 'unordered-list',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`- ${selection}`);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Unordered List',
+      },
+      {
+        name: 'ordered-list',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`1. ${selection}`);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Ordered List',
+      },
+      '|' as const,
+      {
+        name: 'link',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`[${selection}](url)`);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Link',
+      },
+      {
+        name: 'image',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`![${selection}](url)`);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Image',
+      },
+      {
+        name: 'code',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          const selection = cm.getSelection();
+          cm.replaceSelection(`\`\`\`\n${selection}\n\`\`\``);
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Code',
+      },
+      {
+        name: 'table',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          cm.replaceSelection('| Column 1 | Column 2 |\n| -------- | -------- |\n| Cell 1   | Cell 2   |');
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Table',
+      },
+      '|' as const,
+      {
+        name: 'undo',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          cm.undo();
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Undo',
+      },
+      {
+        name: 'redo',
+        action: (editor: any) => {
+          const cm = editor.codemirror;
+          cm.redo();
+        },
+        className: 'lucide-toolbar-icon',
+        title: 'Redo',
+      },
+    ] as any,
     status: false,
     sideBySideFullscreen: false,
     previewRender: () => '', // Disable built-in preview
@@ -301,12 +424,10 @@ const App: React.FC = (): React.JSX.Element => {
         <div className="w-full h-screen flex flex-col">
           {/* Action Bar */}
           <div className="flex items-center justify-between p-4 border-b bg-background">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold">Markdown Editor</h3>
-              {hasUnsavedChanges && (
-                <span className="text-sm text-yellow-600">Unsaved changes</span>
-              )}
-            </div>
+            {hasUnsavedChanges && (
+              <span className="text-sm text-yellow-600">Unsaved changes</span>
+            )}
+            {!hasUnsavedChanges && <div></div>}
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
               <div className="flex gap-1 border rounded-md p-1">
