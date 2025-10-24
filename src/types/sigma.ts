@@ -2,7 +2,7 @@
 export interface SigmaConfig {
   textControl?: string;
   config?: string;
-  editMode?: boolean;
+  mode?: 'preview' | 'style' | 'edit';
 }
 
 // Plugin settings interface
@@ -14,6 +14,8 @@ export interface PluginSettings {
   contentAlignment: 'left' | 'center' | 'right';
   blockAlignment: 'left' | 'center' | 'right' | 'justify';
   contentWidth: 'full' | 'narrow' | 'medium' | 'wide';
+  editorViewMode?: 'split' | 'editor' | 'preview';
+  fontFamily?: string;
 }
 
 // Sigma client interface (based on @sigmacomputing/plugin)

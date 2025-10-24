@@ -5,7 +5,7 @@ A Sigma Computing plugin that displays markdown content from a Sigma control, bu
 ## Features
 
 - **Markdown Rendering**: Displays markdown content from a selected Sigma text control using react-markdown
-- **Settings Panel**: Comprehensive customization options including colors, alignment, and sizing (accessible in edit mode)
+- **Settings Panel**: Comprehensive customization options including colors, alignment, and sizing (accessible in style mode)
 - **TypeScript**: Full type safety with strict configuration and better developer experience
 - **shadcn/ui Components**: Modern, accessible UI components built with Radix UI
 - **Sigma Integration**: Ready-to-use Sigma plugin configuration for variable controls
@@ -45,7 +45,7 @@ The plugin is configured with the following editor panel options:
 
 - **Text Control (Markdown Source)**: Select a Sigma text control that contains markdown content
 - **Settings Config**: JSON configuration for plugin settings
-- **Edit Mode**: Toggle to access settings panel
+- **Style Mode**: Toggle to access settings panel
 
 ### Available Settings
 
@@ -121,7 +121,7 @@ src/
    
 2. **Configure the Plugin**:
    - Select the text control as the "Text Control (Markdown Source)"
-   - Enable "Edit Mode" to access styling settings
+   - Enable "Style Mode" to access styling settings
    - Customize colors, alignment, and sizing options in the settings panel
 
 3. **Markdown Features Supported**:
