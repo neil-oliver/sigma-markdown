@@ -27,7 +27,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   blockAlignment: 'left',
   contentWidth: 'full',
   editorViewMode: 'split',
-  fontFamily: AVAILABLE_FONTS[0].value
+  fontFamily: AVAILABLE_FONTS[0].value,
+  fontSize: 16
 };
 
 interface SettingsProps {
@@ -107,6 +108,13 @@ const Settings: React.FC<SettingsProps> = ({
 
   const handleFontFamilyChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     setTempSettings((prev: PluginSettings) => ({ ...prev, fontFamily: e.target.value }));
+  };
+
+  const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value >= 8 && value <= 72) {
+      setTempSettings((prev: PluginSettings) => ({ ...prev, fontSize: value }));
+    }
   };
 
   return (
@@ -254,6 +262,23 @@ const Settings: React.FC<SettingsProps> = ({
               ))}
             </select>
             <p className="text-sm text-muted-foreground">Choose the font family for the content</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fontSize">Font Size (px)</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="fontSize"
+                type="range"
+                min="8"
+                max="72"
+                value={tempSettings.fontSize || 16}
+                onChange={handleFontSizeChange}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium w-12 text-center">{tempSettings.fontSize || 16}px</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Adjust the base font size (8-72px)</p>
           </div>
         </div>
 

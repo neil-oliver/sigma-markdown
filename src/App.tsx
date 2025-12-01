@@ -495,7 +495,8 @@ const App: React.FC = (): React.JSX.Element => {
                       className="prose prose-lg max-w-none markdown-content"
                       style={{ 
                         textAlign: settings.textAlignment,
-                        fontFamily: settings.fontFamily 
+                        fontFamily: settings.fontFamily,
+                        fontSize: settings.fontSize ? `${settings.fontSize}px` : undefined
                       }}
                     >
                       <ReactMarkdown
@@ -549,7 +550,8 @@ const App: React.FC = (): React.JSX.Element => {
                 className="prose prose-lg max-w-none markdown-content"
                 style={{ 
                   textAlign: settings.textAlignment,
-                  fontFamily: settings.fontFamily 
+                  fontFamily: settings.fontFamily,
+                  fontSize: settings.fontSize ? `${settings.fontSize}px` : undefined
                 }}
               >
                 <ReactMarkdown

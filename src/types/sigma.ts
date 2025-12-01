@@ -16,6 +16,7 @@ export interface PluginSettings {
   contentWidth: 'full' | 'narrow' | 'medium' | 'wide';
   editorViewMode?: 'split' | 'editor' | 'preview';
   fontFamily?: string;
+  fontSize?: number;
 }
 
 // Sigma client interface (based on @sigmacomputing/plugin)
