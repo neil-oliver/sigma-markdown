@@ -24,19 +24,19 @@
 }
 
 .markdown-content h1 {
-  font-size: 2rem;
+  font-size: 2em;
   border-bottom: 2px solid currentColor;
   padding-bottom: 0.5rem;
 }
 
 .markdown-content h2 {
-  font-size: 1.5rem;
+  font-size: 1.5em;
   border-bottom: 1px solid currentColor;
   padding-bottom: 0.25rem;
 }
 
 .markdown-content h3 {
-  font-size: 1.25rem;
+  font-size: 1.25em;
 }
 
 .markdown-content p {
@@ -66,7 +66,7 @@
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
+  font-size: 0.875em;
 }
 
 .markdown-content pre {
