@@ -165,10 +165,6 @@ const App: React.FC = (): React.JSX.Element => {
   // Use locked config if available, otherwise use raw config
   const config = lockedConfigRef.current || rawConfig;
   
-  // Check if config is still loading (Sigma SDK hasn't provided values yet)
-  // We know config has loaded when we have at least the mode or sourceType (which have defaults)
-  const isConfigLoading = config.mode === undefined && config.sourceType === undefined;
-  
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [settings, setSettings] = useState<PluginSettings>(DEFAULT_SETTINGS);
   const [markdownContent, setMarkdownContent] = useState<string>('');
@@ -482,15 +478,6 @@ const App: React.FC = (): React.JSX.Element => {
   const isSourceConfigured = config.sourceType === 'tableColumn' 
     ? Boolean(config.tableElement && config.tableColumn)
     : Boolean(config.textControl);
-
-  // Show loading state while Sigma SDK is still providing config
-  if (isConfigLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background text-muted-foreground">
-        <p>Loading plugin configuration...</p>
-      </div>
-    );
-  }
 
   // Early return for missing source configuration - show onboarding
   if (!isSourceConfigured) {
