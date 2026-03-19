@@ -9,7 +9,7 @@ A Sigma Computing plugin that displays markdown content from a Sigma control, bu
 - **TypeScript**: Full type safety with strict configuration and better developer experience
 - **shadcn/ui Components**: Modern, accessible UI components built with Radix UI
 - **Sigma Integration**: Ready-to-use Sigma plugin configuration for variable controls
-- **Responsive Design**: Clean layout that adapts to different container sizes
+- **Responsive Design**: Clean layout that adapts to different container sizes 💪
 
 ## Getting Started
 
