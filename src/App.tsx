@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { client, useConfig, useVariable } from '@sigmacomputing/plugin';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -22,15 +22,24 @@ import {
 } from './types/sigma';
 import './App.css';
 
-// Storage key for persisting content across reloads
-const CONTENT_CACHE_KEY = 'sigma-markdown-content-cache';
+// Source-specific cache keys to prevent cross-source cache pollution
+const getCacheKey = (sourceType: string) => `sigma-markdown-cache-${sourceType}`;
 
-// Try to restore cache from sessionStorage on module load
-let globalContentCache = '';
+// Cache storage for each source type
+const globalContentCaches: Record<string, string> = {
+  textControl: '',
+  tableColumn: ''
+};
+
+// Try to restore caches from sessionStorage on module load
 try {
-  const stored = sessionStorage.getItem(CONTENT_CACHE_KEY);
-  if (stored) {
-    globalContentCache = stored;
+  const textCache = sessionStorage.getItem(getCacheKey('textControl'));
+  if (textCache) {
+    globalContentCaches.textControl = textCache;
+  }
+  const tableCache = sessionStorage.getItem(getCacheKey('tableColumn'));
+  if (tableCache) {
+    globalContentCaches.tableColumn = tableCache;
   }
 } catch (e) {
   console.warn('Failed to restore cache from sessionStorage:', e);
@@ -65,38 +74,126 @@ const VariableConnector: React.FC<VariableConnectorProps> = ({ variableName, onM
   return null; // This component only handles data, no rendering
 };
 
+// Separate component for table element connection (read-only)
+interface TableConnectorProps {
+  elementId: string;
+  columnId: string;
+  onMarkdownChange: (markdown: string) => void;
+}
+
+const TableConnector: React.FC<TableConnectorProps> = ({ elementId, columnId, onMarkdownChange }) => {
+  // Use ref to avoid re-subscribing when callback changes
+  const onMarkdownChangeRef = useRef(onMarkdownChange);
+  onMarkdownChangeRef.current = onMarkdownChange;
+  
+  // Track if we've received data to avoid clearing on unmount race
+  const hasReceivedData = useRef(false);
+  
+  useEffect(() => {
+    if (!elementId || !columnId) {
+      return;
+    }
+    
+    hasReceivedData.current = false;
+    
+    // Subscribe to element data changes
+    const unsubscribe = client.elements.subscribeToElementData(elementId, (elementData) => {
+      if (!elementData || Object.keys(elementData).length === 0) {
+        return;
+      }
+      
+      // Get first row value from the selected column
+      const columnData = elementData[columnId];
+      
+      if (columnData && columnData.length > 0) {
+        const firstRowValue = String(columnData[0] ?? '');
+        hasReceivedData.current = true;
+        onMarkdownChangeRef.current(firstRowValue);
+      } else {
+        // Fallback: use first available column if configured column not found
+        const dataKeys = Object.keys(elementData);
+        const firstColumnKey = dataKeys[0];
+        const firstColumnData = elementData[firstColumnKey];
+        
+        if (firstColumnData && firstColumnData.length > 0) {
+          const firstRowValue = String(firstColumnData[0] ?? '');
+          hasReceivedData.current = true;
+          onMarkdownChangeRef.current(firstRowValue);
+        }
+      }
+    });
+    
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+    };
+  }, [elementId, columnId]);
+  
+  return null; // This component only handles data, no rendering
+};
+
 // Configure the plugin editor panel
 client.config.configureEditorPanel([
+  { name: 'sourceType', type: 'radio', label: 'Source', values: ['textControl', 'tableColumn'], defaultValue: 'textControl' },
   { name: 'textControl', type: 'variable', label: 'Text Control (Markdown Source)' },
+  { name: 'tableElement', type: 'element', label: 'Table Element' },
+  { name: 'tableColumn', type: 'column', source: 'tableElement', allowMultiple: false, label: 'Markdown Column' },
   { name: 'config', type: 'text', label: 'Settings Config (JSON)', defaultValue: "{}" },
   { name: 'mode', type: 'radio', label: 'Mode', values: ['preview', 'style', 'edit'], defaultValue: 'preview' }
 ]);
 
 const App: React.FC = (): React.JSX.Element => {
-  const config: SigmaConfig = useConfig();
+  const rawConfig: SigmaConfig = useConfig();
+  
+  // Lock in config values once we have valid table config
+  // This prevents Sigma SDK's intermittent empty updates from unmounting our connector
+  const lockedConfigRef = useRef<SigmaConfig | null>(null);
+  
+  // Check if this config has valid table source configuration
+  const hasValidTableConfig = rawConfig.sourceType === 'tableColumn' && 
+                              rawConfig.tableElement && 
+                              rawConfig.tableColumn;
+  
+  // Check if this config has valid text control configuration  
+  const hasValidTextConfig = rawConfig.sourceType === 'textControl' && rawConfig.textControl;
+  
+  // Lock in the config when we get valid values
+  if (hasValidTableConfig || hasValidTextConfig || rawConfig.sourceType) {
+    lockedConfigRef.current = { ...rawConfig };
+  }
+  
+  // Use locked config if available, otherwise use raw config
+  const config = lockedConfigRef.current || rawConfig;
+  
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [settings, setSettings] = useState<PluginSettings>(DEFAULT_SETTINGS);
   const [markdownContent, setMarkdownContent] = useState<string>('');
   const [draftContent, setDraftContent] = useState<string>('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   
-  // Handle markdown content updates from the variable connector
+  // Determine effective mode - table source is read-only, so force preview mode
+  const effectiveMode = config.sourceType === 'tableColumn' ? 'preview' : config.mode;
+  
+  // Handle markdown content updates from the connectors
   const handleMarkdownChange = useCallback((markdown: string) => {
-    // Update global cache and persist to sessionStorage
+    const sourceType = config.sourceType || 'textControl';
+    const cacheKey = getCacheKey(sourceType);
+    
+    // Update source-specific cache and persist to sessionStorage
     if (markdown) {
-      globalContentCache = markdown;
+      globalContentCaches[sourceType] = markdown;
       try {
-        sessionStorage.setItem(CONTENT_CACHE_KEY, markdown);
+        sessionStorage.setItem(cacheKey, markdown);
       } catch (e) {
         console.warn('Failed to persist to sessionStorage:', e);
       }
     } else {
       // If cache is empty, try to restore from sessionStorage
-      if (!globalContentCache) {
+      if (!globalContentCaches[sourceType]) {
         try {
-          const stored = sessionStorage.getItem(CONTENT_CACHE_KEY);
+          const stored = sessionStorage.getItem(cacheKey);
           if (stored) {
-            globalContentCache = stored;
+            globalContentCaches[sourceType] = stored;
           }
         } catch (e) {
           console.warn('Failed to restore from sessionStorage:', e);
@@ -104,23 +201,25 @@ const App: React.FC = (): React.JSX.Element => {
       }
     }
     
-    // Update state, using cache if markdown is empty
-    const finalContent = markdown || globalContentCache;
+    // Update state, using cache for current source type if markdown is empty
+    const finalContent = markdown || globalContentCaches[sourceType];
     setMarkdownContent(finalContent);
     
     // Update draft if we're in edit mode and don't have unsaved changes
-    if (config.mode === 'edit' && !hasUnsavedChanges) {
+    // Only applies to textControl source (tableColumn is read-only)
+    if (config.mode === 'edit' && !hasUnsavedChanges && sourceType === 'textControl') {
       setDraftContent(finalContent);
     }
-  }, [config.mode, hasUnsavedChanges]);
+  }, [config.mode, config.sourceType, hasUnsavedChanges]);
 
-  // Initialize draft content when entering edit mode
+  // Initialize draft content when entering edit mode (only for textControl source)
   useEffect(() => {
-    if (config.mode === 'edit' && !hasUnsavedChanges) {
-      const content = markdownContent || globalContentCache;
+    const sourceType = config.sourceType || 'textControl';
+    if (config.mode === 'edit' && !hasUnsavedChanges && sourceType === 'textControl') {
+      const content = markdownContent || globalContentCaches[sourceType];
       setDraftContent(content);
     }
-  }, [config.mode, markdownContent, hasUnsavedChanges]);
+  }, [config.mode, config.sourceType, markdownContent, hasUnsavedChanges]);
 
   // Parse config JSON and load settings
   useEffect(() => {
@@ -375,11 +474,17 @@ const App: React.FC = (): React.JSX.Element => {
     return classes;
   };
 
-  // Early return for missing text control - show onboarding
-  if (!config.textControl) {
+  // Determine if source is properly configured
+  const isSourceConfigured = config.sourceType === 'tableColumn' 
+    ? Boolean(config.tableElement && config.tableColumn)
+    : Boolean(config.textControl);
+
+  // Early return for missing source configuration - show onboarding
+  if (!isSourceConfigured) {
     return (
       <Onboarding 
         hasTextControl={false}
+        sourceType={config.sourceType || 'textControl'}
         onOpenSettings={handleShowSettings}
       />
     );
@@ -393,15 +498,22 @@ const App: React.FC = (): React.JSX.Element => {
         color: String(settings.textColor) || 'black'
       }}
     >
-      {/* Variable connector */}
-      {config.textControl && (
+      {/* Conditionally render the appropriate data connector */}
+      {config.sourceType === 'tableColumn' && config.tableElement && config.tableColumn ? (
+        <TableConnector
+          key={`${config.tableElement}-${config.tableColumn}`}
+          elementId={config.tableElement}
+          columnId={config.tableColumn}
+          onMarkdownChange={handleMarkdownChange}
+        />
+      ) : config.textControl ? (
         <VariableConnector
           key={config.textControl}
           variableName={config.textControl}
           onMarkdownChange={handleMarkdownChange}
         />
-      )}
-      {config.mode === 'style' && (
+      ) : null}
+      {effectiveMode === 'style' && (
         <Button 
           className="absolute top-5 right-5 z-10 gap-2"
           onClick={handleShowSettings}
@@ -412,8 +524,8 @@ const App: React.FC = (): React.JSX.Element => {
         </Button>
       )}
       
-      {config.mode === 'edit' ? (
-        /* Edit Mode - Split View */
+      {effectiveMode === 'edit' ? (
+        /* Edit Mode - Split View (only available for textControl source) */
         <div className="w-full h-screen flex flex-col">
           {/* Action Bar */}
           <div className="flex items-center justify-between p-4 border-b bg-background">
@@ -590,15 +702,15 @@ const App: React.FC = (): React.JSX.Element => {
               <div className="text-center py-20">
                 <h3 className="text-lg font-semibold mb-4">Markdown Display Plugin</h3>
                 <p className="text-muted-foreground">
-                  {config.textControl ? 
-                    'The selected text control is empty or contains no markdown content.' :
-                    'Please select a text control to display markdown content.'
+                  {config.sourceType === 'tableColumn' 
+                    ? 'The selected table column is empty or contains no markdown content.'
+                    : 'The selected text control is empty or contains no markdown content.'
                   }
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  {config.textControl ?
-                    'Enter some markdown text in the connected control to see it rendered here.' :
-                    'Use the configuration panel to connect a text control with markdown content.'
+                  {config.sourceType === 'tableColumn'
+                    ? 'Ensure the first row of the selected column contains markdown text.'
+                    : 'Enter some markdown text in the connected control to see it rendered here.'
                   }
                 </p>
               </div>

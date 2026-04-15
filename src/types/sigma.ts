@@ -1,6 +1,9 @@
 // Sigma plugin configuration types
 export interface SigmaConfig {
+  sourceType?: 'textControl' | 'tableColumn';
   textControl?: string;
+  tableElement?: string;
+  tableColumn?: string;
   config?: string;
   mode?: 'preview' | 'style' | 'edit';
 }
